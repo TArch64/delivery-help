@@ -3,7 +3,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const cookieParser = require('cookie-parser')
-const { driverRouter, rideRouter, authRouter } = require('./routers');
+const { driverRouter, rideRouter, authRouter, testRouter } = require('./routers');
 const { rideModel } = require('./models');
 const { initializeSocketServer } = require('./socket');
 const { initializeBotServer } = require('./bot');
@@ -45,7 +45,9 @@ async function bootstrap() {
     });
 
     if (TELEGRAM_BOT_TOKEN) {
-        initializeBotServer(TELEGRAM_BOT_TOKEN);
+        const bot = initializeBotServer(TELEGRAM_BOT_TOKEN);
+        bot.launch();
+        app.use('/api/test', testRouter(bot));
     }
 }
 

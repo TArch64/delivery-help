@@ -30,6 +30,8 @@ function afterButton(ctx, next) {
 }
 
 async function helpRoute(ctx, next) {
+    ctx.reply(ctx.message.chat.id);
+
     if (ctx.driver) {
         ctx.reply('/ride - Поїхали!');
         ctx.reply('/profile - Мій профіль');
@@ -87,7 +89,9 @@ function showMessage(ctx, next) {
     }
     messagesDict[ctx.session.process][ctx.session.step]();
 
-    return next();
+    if (next) {
+        return next();
+    }
 }
 
 function setProcessAndStepMiddleware(process, step) {
@@ -132,20 +136,39 @@ async function newRideRoute(ctx, next) {
 }
 
 async function clearDev(ctx) {
+    const drivers =  await driverModel.find({ _telegramId: { $ne: null }});
+    const rides = await rideModel.deleteMany({ driver: { $in: drivers }});
+
     const dm = await driverModel.deleteMany({ _telegramId: { $ne: null }});
     const s = await telegramSessionModel.deleteMany({});
 
-    ctx.reply(`Deleted drivers: ${dm.deletedCount}`)
-    ctx.reply(`Deleted sessions: ${s.deletedCount}`)
+    ctx.reply(`Deleted drivers: ${dm.deletedCount}`);
+    ctx.reply(`Deleted sessions: ${s.deletedCount}`);
+    ctx.reply(`Deleted rides: ${rides.deletedCount}`)
 }
 
 async function processMessage(ctx, next) {
     const actionDict = {
         "IDLE": {
-            0: async () => { showMessage(ctx, next); }
+            0: async () => { 
+                if (ctx.message.text == 'CREATE_RIDE') {
+                    ctx.session.step = 0;
+                    ctx.session.process = 'RIDE_REGISTRATION';
+                    await ctx.session.save();
+                } else {
+                    showMessage(ctx, next); 
+                }
+        }
         },
         "USER_REGISTRATION": {
-            0: async () => { return next(); },
+            0: async () => { 
+                if (ctx.message.text == 'ENTER_NAME') {
+                    ctx.session.step = 1;
+                    await ctx.session.save();
+                } else {
+                    showMessage(ctx, next); 
+                }
+            },
             1: async () => {
                 ctx.session.name = ctx.message.text;
                 ctx.session.step = 2;
@@ -172,7 +195,15 @@ async function processMessage(ctx, next) {
             }
         },
         "RIDE_REGISTRATION": {
-            0: async () => { return next(); },
+            0: async () => { 
+                if (ctx.message.text == 'FROM_UKRAINE') {
+                    ctx.session.step = 2;
+                    ctx.session.fromCountry = 'Україна';
+                    await ctx.session.save();
+                } else {
+                    return next(); 
+                }
+            },
             1: async () => { 
                 ctx.session.fromCountry = ctx.message.text;
                 ctx.session.step = 3;
@@ -191,12 +222,26 @@ async function processMessage(ctx, next) {
                 await ctx.session.save();
                 showMessage(ctx, next);
             },
-            4: async () => { 
-                showMessage(ctx, next);
+            4: async () => {
+                if (ctx.message.text == 'TEST_DATE') {
+                    ctx.session.departureTime = '2022-05-01';
+                    ctx.session.step = 5;
+                    await ctx.session.save();
+                } else {
+                    showMessage(ctx, next);
+                }
             },
-            5: async () => { return next(); },
+            5: async () => { 
+                if (ctx.message.text == 'SET_CAR') {
+                    setVehicle('CAR')(ctx, next);
+                } else {
+                    return next(); 
+                }
+            },
         }
     }
+    console.log('processMessage!!!!!!!')
+    console.log(ctx.session.process, ctx.session.step);
     await actionDict[ctx.session.process][ctx.session.step]();
 }
 
@@ -232,7 +277,13 @@ function setVehicle(vehicleType) {
 
 function initializeBotServer(token) {
     const bot = new Telegraf(token);
-    const calendar = new Calendar(bot)
+    const calendar = new Calendar(bot);
+    bot.use(async (ctx, next) => {
+        console.log('TEST MIDDLEWARE');
+        console.dir(ctx, { depth: 2 });
+        return await next();
+    });
+
     bot.use(async (ctx, next) => {
         ctx.calendar = calendar;
         return next()
@@ -332,7 +383,9 @@ function initializeBotServer(token) {
 
     bot.on('text', sessionMiddleware('chat'), processMessage);
 
-    bot.launch();
+    // bot.launch();
+
+    return bot;
 }
 
 module.exports = { initializeBotServer };

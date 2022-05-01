@@ -12,5 +12,5 @@ git clone --branch "$project_branch" "$project_repository" "$project_dir" && \
 export $(cat "$HOME/projects/.env" | xargs) && \
 echo "$CR_PASSWORD" | docker login ghcr.io -u "$CR_USERNAME" --password-stdin && \
 exec_docker "pull" && \
-exec_docker "down" && \
+exec_docker "down --remove-orphans" && \
 exec_docker "up --detach"

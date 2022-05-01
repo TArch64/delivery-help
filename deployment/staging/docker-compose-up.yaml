@@ -1,19 +1,12 @@
 version: '3'
 
 services:
-  nginx:
-    restart: always
-    image: nginx:1.21.6-alpine
-    volumes:
-      - ./deployment/staging/config.nginx:/etc/nginx/conf.d/default.conf
-    env_file: ${HOME}/projects/.env
-    ports:
-      - 80:80
-
   frontend:
     restart: always
     image: ${CR_BASE}/delivery-help-frontend-staging:latest
     env_file: ${HOME}/projects/.env
+    ports:
+      - 80:80
 
   backend:
     restart: always

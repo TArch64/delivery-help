@@ -3,9 +3,6 @@ import colors from 'vuetify/lib/util/colors';
 const { FRONTEND_API_SERVER_URL, FRONTEND_API_BROWSER_URL, FRONTEND_API_SOCKET_URL } = process.env;
 
 export default {
-    ssr: false,
-    target: 'static',
-
     head: {
         title: 'DeliveryHelp',
 

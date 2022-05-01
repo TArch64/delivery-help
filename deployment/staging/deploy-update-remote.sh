@@ -1,5 +1,5 @@
 project_repository='git@github.com:TArch64/delivery-help.git';
-project_branch='load-testing';
+project_branch='__DEPLOYMENT_BRANCH__';
 project_dir="$HOME/projects/delivery-help";
 docker_compose_file="$project_dir/deployment/staging/docker-compose-up.yaml";
 

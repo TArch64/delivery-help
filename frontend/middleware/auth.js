@@ -1,10 +1,12 @@
 function isBrowserCookieExists(cookieName) {
-    const expireTime = new Date();
-    expireTime.setTime(expireTime.getTime() + (1000));
-    const expires = 'expires=' + expireTime.toUTCString();
+    // const expireTime = new Date();
+    // expireTime.setTime(expireTime.getTime() + (1000));
+    // const expires = 'expires=' + expireTime.toUTCString();
+    //
+    // document.cookie = cookieName + '=new_value;path=/;' + expires;
+    // return document.cookie.indexOf(cookieName + '=') === -1;
 
-    document.cookie = cookieName + '=new_value;path=/;' + expires;
-    return document.cookie.indexOf(cookieName + '=') === -1;
+    return true;
 }
 
 const AUTH_COOKIE = 'dh.auth';

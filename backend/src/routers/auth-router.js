@@ -24,8 +24,6 @@ authRouter.post('/auth/sign-in', async (req, res) => {
     const token = await authService.generateToken(user);
 
     res.cookie('dh.auth', token, {
-        signed: true,
-        httpOnly: true,
         maxAge: Number(BACKEND_AUTH_EXPIRATION)
     });
 

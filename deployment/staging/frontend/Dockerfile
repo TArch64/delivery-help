@@ -9,7 +9,7 @@ RUN npm install --production
 COPY ./frontend/. ./
 COPY ./deployment/staging/frontend/.env /secrets/.env
 
-RUN export $(cat /secrets/.env | xargs) && npm run generate
+RUN export $(cat /secrets/.env | xargs) && npm run build
 
 FROM nginx:1.21.6-alpine
 LABEL org.opencontainers.image.source https://github.com/TArch64/delivery-help

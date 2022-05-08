@@ -26,23 +26,28 @@ function getMessageObject(id, text) {
     }
 }
 
+async function waitAfter(action, ms = 10) {
+    await action();
+    return new Promise(resolve => { setTimeout(() => resolve(), ms) } );
+}
+
 function testRouter(bot) {
     const router = Router();
 
     router.post('/telegram', async (req, res) => {
         const { id } = req.body;
 
-        await bot.handleUpdate(getMessageObject(id, '/start'));
-        await bot.handleUpdate(getMessageObject(id, 'ENTER_NAME'));
-        await bot.handleUpdate(getMessageObject(id, 'Test Name'));
-        await bot.handleUpdate(getMessageObject(id, 3808805553535));
+        await waitAfter(() => bot.handleUpdate(getMessageObject(id, '/start')), 100);
+        await waitAfter(() => bot.handleUpdate(getMessageObject(id, 'ENTER_NAME')), 100);
+        await waitAfter(() => bot.handleUpdate(getMessageObject(id, 'Test Name')), 100);
+        await waitAfter(() => bot.handleUpdate(getMessageObject(id, 3808805553535)), 100);
 
-        await bot.handleUpdate(getMessageObject(id, 'CREATE_RIDE'));
-        await bot.handleUpdate(getMessageObject(id, 'FROM_UKRAINE'));
-        await bot.handleUpdate(getMessageObject(id, 'Test City From'));
-        await bot.handleUpdate(getMessageObject(id, 'Test City Destination'));
-        await bot.handleUpdate(getMessageObject(id, 'TEST_DATE'));
-        await bot.handleUpdate(getMessageObject(id, 'SET_CAR'));
+        await waitAfter(() => bot.handleUpdate(getMessageObject(id, 'CREATE_RIDE')), 100);
+        await waitAfter(() => bot.handleUpdate(getMessageObject(id, 'FROM_UKRAINE')), 100);
+        await waitAfter(() => bot.handleUpdate(getMessageObject(id, 'Test City From')), 100);
+        await waitAfter(() => bot.handleUpdate(getMessageObject(id, 'Test City Destination')), 100);
+        await waitAfter(() => bot.handleUpdate(getMessageObject(id, 'TEST_DATE')), 100);
+        await waitAfter(() => bot.handleUpdate(getMessageObject(id, 'SET_CAR')), 100);
 
         const drivers =  await driverModel.find({ _telegramId: id });
         const deletedRides = await rideModel.deleteMany({ driver: { $in: drivers }});

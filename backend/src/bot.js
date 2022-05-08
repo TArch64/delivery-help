@@ -30,17 +30,23 @@ function afterButton(ctx, next) {
 }
 
 async function helpRoute(ctx, next) {
-    ctx.reply(ctx.message.chat.id);
+    await ctx.reply(ctx.message.chat.id);
 
     if (ctx.driver) {
-        ctx.reply('/ride - Поїхали!');
-        ctx.reply('/profile - Мій профіль');
+        await ctx.reply('/ride - Поїхали!');
+        await ctx.reply('/profile - Мій профіль');
     } else {
-        ctx.reply('Для початку работи, представтеся');
-        ctx.session.process = 'USER_REGISTRATION';
-        ctx.session.step = 0;
-        await ctx.session.save();
-        showMessage(ctx, next);
+        try {
+            await ctx.reply('Для початку работи, представтеся');
+            ctx.session.process = 'USER_REGISTRATION';
+            ctx.session.step = 0;
+            await ctx.session.save();
+            showMessage(ctx, next);
+        } catch (error) {
+            console.log('!!!!!!!!!!!!!!! ERROR');
+            console.log(error);
+        }
+        
     }
 }
 
@@ -50,7 +56,7 @@ function showMessage(ctx, next) {
             0: () => helpRoute(ctx),
         },
         "USER_REGISTRATION": {
-            0: () => ctx.reply('Як вас звати?', {
+            0: async () => await ctx.reply('Як вас звати?', {
                 reply_markup: {
                     inline_keyboard: [
                         [ { text: `Це моє ім\'я ${ctx.message.chat.first_name} ${ctx.message.chat.last_name}`, callback_data: "USE_PROFILE_NAME" } ],
@@ -58,11 +64,11 @@ function showMessage(ctx, next) {
                     ]
                 }
             }),
-            1: () => ctx.reply('Введіть ваше ім\'я'),
-            2: () => ctx.reply('Введіть ваш номер', { reply_markup: { one_time_keyboard: true, keyboard: [[{text: 'Відправити мій телеграм контакт 📲', request_contact: true}]] } } )
+            1: async () => await ctx.reply('Введіть ваше ім\'я'),
+            2: async () => await ctx.reply('Введіть ваш номер', { reply_markup: { one_time_keyboard: true, keyboard: [[{text: 'Відправити мій телеграм контакт 📲', request_contact: true}]] } } )
         },
         "RIDE_REGISTRATION": {
-            0: () => ctx.reply('Ви зараз за кордоном?', {
+            0: async () => await ctx.reply('Ви зараз за кордоном?', {
                 reply_markup: {
                     inline_keyboard: [
                         [ { text: "Так за кордонм", callback_data: "FROM_ABROAD" } ],
@@ -70,13 +76,13 @@ function showMessage(ctx, next) {
                     ]
                 }
             }),
-            1: () => ctx.reply('Яка країна?'),
-            2: () => ctx.reply('Місто?'),
-            3: () => ctx.reply('Введіть кінцевий населенний пункт призначення'),
-            4: () => {
-                ctx.reply('Дата вашої поїздки', ctx.calendar.getCalendar())
+            1: async () => await ctx.reply('Яка країна?'),
+            2: async () => await ctx.reply('Місто?'),
+            3: async () => await ctx.reply('Введіть кінцевий населенний пункт призначення'),
+            4: async () => {
+                await ctx.reply('Дата вашої поїздки', ctx.calendar.getCalendar())
             },
-            5: () => ctx.reply('Ваш тип авто?', {
+            5: async () => await ctx.reply('Ваш тип авто?', {
                 reply_markup: {
                     inline_keyboard: [
                         [ { text: "Легковушка ( < 2т)", callback_data: "SET_CAR" } ],
@@ -103,18 +109,18 @@ function setProcessAndStepMiddleware(process, step) {
     }
 }
 
-function profileRoute(ctx) {
+async function profileRoute(ctx) {
     if (ctx.driver) {
-        ctx.reply(`Ім'я: ${ctx.driver.name}`);
-        ctx.reply(`Телефон: ${ctx.driver.phone}`);
+        await ctx.reply(`Ім'я: ${ctx.driver.name}`);
+        await ctx.reply(`Телефон: ${ctx.driver.phone}`);
     } else {
-        ctx.reply('Команда доступна лише для зареєстрованих водіїв');
+        await ctx.reply('Команда доступна лише для зареєстрованих водіїв');
     }
 }
 
 async function newUserRoute(ctx, next) {
     if (ctx.driver) {
-        ctx.reply('Реестрація доступна лише новим користувачам');
+        await ctx.reply('Реестрація доступна лише новим користувачам');
     } else {
         ctx.session.process = 'USER_REGISTRATION';
         ctx.session.step = 0;
@@ -131,7 +137,7 @@ async function newRideRoute(ctx, next) {
     if (ctx.driver) {
         showMessage(ctx, next);
     } else {
-        ctx.reply('Команда доступна лише для зареєстрованих водіїв');
+        await ctx.reply('Команда доступна лише для зареєстрованих водіїв');
     }
 }
 
@@ -142,9 +148,9 @@ async function clearDev(ctx) {
     const dm = await driverModel.deleteMany({ _telegramId: { $ne: null }});
     const s = await telegramSessionModel.deleteMany({});
 
-    ctx.reply(`Deleted drivers: ${dm.deletedCount}`);
-    ctx.reply(`Deleted sessions: ${s.deletedCount}`);
-    ctx.reply(`Deleted rides: ${rides.deletedCount}`)
+    await ctx.reply(`Deleted drivers: ${dm.deletedCount}`);
+    await ctx.reply(`Deleted sessions: ${s.deletedCount}`);
+    await ctx.reply(`Deleted rides: ${rides.deletedCount}`)
 }
 
 async function processMessage(ctx, next) {
@@ -188,7 +194,7 @@ async function processMessage(ctx, next) {
                     grade: 'NOT VERIFIED'
                 });
 
-                ctx.reply('Дякуємо за реестрацію');
+                await ctx.reply('Дякуємо за реестрацію');
                 setTimeout(() => {
                     helpRoute(ctx, next);
                 }, 200);
@@ -269,7 +275,7 @@ function setVehicle(vehicleType) {
         await ride.populate('driver');
         broadcastNewRide(ride);
 
-        ctx.reply('Дякуємо! Очікуйте на дзвінок координатора');
+        await ctx.reply('Дякуємо! Очікуйте на дзвінок координатора');
 
         helpRoute(ctx, next);
     }
@@ -316,7 +322,7 @@ function initializeBotServer(token) {
             grade: 'NOT VERIFIED'
         });
 
-        ctx.reply('Дякуємо за реестрацію');
+        await ctx.reply('Дякуємо за реестрацію');
         setTimeout(() => {
             helpRoute(ctx, next);
         }, 200);

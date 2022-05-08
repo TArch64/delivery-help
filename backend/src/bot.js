@@ -36,24 +36,18 @@ async function helpRoute(ctx, next) {
         await ctx.reply('/ride - Поїхали!');
         await ctx.reply('/profile - Мій профіль');
     } else {
-        try {
-            await ctx.reply('Для початку работи, представтеся');
-            ctx.session.process = 'USER_REGISTRATION';
-            ctx.session.step = 0;
-            await ctx.session.save();
-            showMessage(ctx, next);
-        } catch (error) {
-            console.log('!!!!!!!!!!!!!!! ERROR');
-            console.log(error);
-        }
-        
+        await ctx.reply('Для початку работи, представтеся');
+        ctx.session.process = 'USER_REGISTRATION';
+        ctx.session.step = 0;
+        await ctx.session.save();
+        await showMessage(ctx, next);
     }
 }
 
-function showMessage(ctx, next) {
+async function showMessage(ctx, next) {
     const messagesDict = {
         "IDLE": {
-            0: () => helpRoute(ctx),
+            0: async () => await helpRoute(ctx),
         },
         "USER_REGISTRATION": {
             0: async () => await ctx.reply('Як вас звати?', {
@@ -93,7 +87,15 @@ function showMessage(ctx, next) {
             }),
         }
     }
-    messagesDict[ctx.session.process][ctx.session.step]();
+
+    console.log('showMessage!!!!!!!')
+    console.log(ctx.session.process, ctx.session.step);
+    try {
+        await messagesDict[ctx.session.process][ctx.session.step];
+    } catch (error) {
+        console.log('Error on showMessage');
+        console.log(error);
+    }
 
     if (next) {
         return next();
@@ -125,7 +127,7 @@ async function newUserRoute(ctx, next) {
         ctx.session.process = 'USER_REGISTRATION';
         ctx.session.step = 0;
         await ctx.session.save();
-        showMessage(ctx, next);
+        await showMessage(ctx, next);
     }
 }
 
@@ -214,19 +216,19 @@ async function processMessage(ctx, next) {
                 ctx.session.fromCountry = ctx.message.text;
                 ctx.session.step = 3;
                 await ctx.session.save();
-                showMessage(ctx, next);
+                await showMessage(ctx, next);
             },
             2: async () => { 
                 ctx.session.fromCity = ctx.message.text;
                 ctx.session.step = 3;
                 await ctx.session.save();
-                showMessage(ctx, next);
+                await showMessage(ctx, next);
             },
             3: async () => { 
                 ctx.session.destinationCity = ctx.message.text;
                 ctx.session.step = 4;
                 await ctx.session.save();
-                showMessage(ctx, next);
+                await showMessage(ctx, next);
             },
             4: async () => {
                 if (ctx.message.text == 'TEST_DATE') {
@@ -234,12 +236,12 @@ async function processMessage(ctx, next) {
                     ctx.session.step = 5;
                     await ctx.session.save();
                 } else {
-                    showMessage(ctx, next);
+                    await showMessage(ctx, next);
                 }
             },
             5: async () => { 
                 if (ctx.message.text == 'SET_CAR') {
-                    setVehicle('CAR')(ctx, next);
+                    await setVehicle('CAR')(ctx, next);
                 } else {
                     return next(); 
                 }
@@ -248,10 +250,15 @@ async function processMessage(ctx, next) {
     }
     console.log('processMessage!!!!!!!')
     console.log(ctx.session.process, ctx.session.step);
-    await actionDict[ctx.session.process][ctx.session.step]();
+    try {
+        await actionDict[ctx.session.process][ctx.session.step]();
+    } catch (error) {
+        console.log('Error on processMessage');
+        console.log(error);
+    }
 }
 
-function setVehicle(vehicleType) {
+async function setVehicle(vehicleType) {
     return async(ctx, next) => {
         ctx.session.vehicle = vehicleType;
         ctx.session.step = 0;

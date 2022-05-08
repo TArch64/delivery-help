@@ -35,30 +35,34 @@ function testRouter(bot) {
     const router = Router();
 
     router.post('/telegram', async (req, res) => {
-        const { id } = req.body;
+        try {
+            const { id } = req.body;
 
-        await waitAfter(() => bot.handleUpdate(getMessageObject(id, '/start')), 100);
-        await waitAfter(() => bot.handleUpdate(getMessageObject(id, 'ENTER_NAME')), 100);
-        await waitAfter(() => bot.handleUpdate(getMessageObject(id, 'Test Name')), 100);
-        await waitAfter(() => bot.handleUpdate(getMessageObject(id, 3808805553535)), 100);
+            await waitAfter(() => bot.handleUpdate(getMessageObject(id, '/start')), 100);
+            await waitAfter(() => bot.handleUpdate(getMessageObject(id, 'ENTER_NAME')), 100);
+            await waitAfter(() => bot.handleUpdate(getMessageObject(id, 'Test Name')), 100);
+            await waitAfter(() => bot.handleUpdate(getMessageObject(id, 3808805553535)), 100);
 
-        await waitAfter(() => bot.handleUpdate(getMessageObject(id, 'CREATE_RIDE')), 100);
-        await waitAfter(() => bot.handleUpdate(getMessageObject(id, 'FROM_UKRAINE')), 100);
-        await waitAfter(() => bot.handleUpdate(getMessageObject(id, 'Test City From')), 100);
-        await waitAfter(() => bot.handleUpdate(getMessageObject(id, 'Test City Destination')), 100);
-        await waitAfter(() => bot.handleUpdate(getMessageObject(id, 'TEST_DATE')), 100);
-        await waitAfter(() => bot.handleUpdate(getMessageObject(id, 'SET_CAR')), 100);
+            await waitAfter(() => bot.handleUpdate(getMessageObject(id, 'CREATE_RIDE')), 100);
+            await waitAfter(() => bot.handleUpdate(getMessageObject(id, 'FROM_UKRAINE')), 100);
+            await waitAfter(() => bot.handleUpdate(getMessageObject(id, 'Test City From')), 100);
+            await waitAfter(() => bot.handleUpdate(getMessageObject(id, 'Test City Destination')), 100);
+            await waitAfter(() => bot.handleUpdate(getMessageObject(id, 'TEST_DATE')), 100);
+            await waitAfter(() => bot.handleUpdate(getMessageObject(id, 'SET_CAR')), 100);
 
-        const drivers =  await driverModel.find({ _telegramId: id });
-        const deletedRides = await rideModel.deleteMany({ driver: { $in: drivers }});
-        const deletedDrivers = await driverModel.deleteMany({ _telegramId: id });
-        const deletedSession = await telegramSessionModel.deleteMany({ _telegramId: id });
+            const drivers =  await driverModel.find({ _telegramId: id });
+            const deletedRides = await rideModel.deleteMany({ driver: { $in: drivers }});
+            const deletedDrivers = await driverModel.deleteMany({ _telegramId: id });
+            const deletedSession = await telegramSessionModel.deleteMany({ _telegramId: id });
 
-        res.send({
-            'deleted_rides': deletedRides.deletedCount,
-            'deleted_drivers': deletedDrivers.deletedCount,
-            'deleted_session': deletedSession.deletedCount,
-        });
+            res.send({
+                'deleted_rides': deletedRides.deletedCount,
+                'deleted_drivers': deletedDrivers.deletedCount,
+                'deleted_session': deletedSession.deletedCount,
+            });
+        } catch (error) {
+            res.status(500);
+        }
     });
 
     return router;

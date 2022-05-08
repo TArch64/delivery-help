@@ -163,6 +163,10 @@ async function processMessage(ctx, next) {
                     ctx.session.step = 0;
                     ctx.session.process = 'RIDE_REGISTRATION';
                     await ctx.session.save();
+                } else if (ctx.message.text == 'CREATE_DRIVER') {
+                    ctx.session.step = 0;
+                    ctx.session.process = 'USER_REGISTRATION';
+                    await ctx.session.save();
                 } else {
                     showMessage(ctx, next); 
                 }
@@ -258,8 +262,9 @@ async function processMessage(ctx, next) {
     }
 }
 
-async function setVehicle(vehicleType) {
+function setVehicle(vehicleType) {
     return async(ctx, next) => {
+        console.log(ctx);
         ctx.session.vehicle = vehicleType;
         ctx.session.step = 0;
         ctx.session.process = 'IDLE';
@@ -291,11 +296,6 @@ async function setVehicle(vehicleType) {
 function initializeBotServer(token) {
     const bot = new Telegraf(token);
     const calendar = new Calendar(bot);
-    bot.use(async (ctx, next) => {
-        console.log('TEST MIDDLEWARE');
-        console.dir(ctx, { depth: 2 });
-        return await next();
-    });
 
     bot.use(async (ctx, next) => {
         ctx.calendar = calendar;

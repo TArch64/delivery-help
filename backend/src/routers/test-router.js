@@ -39,6 +39,8 @@ function testRouter(bot) {
             const { id } = req.body;
 
             await waitAfter(() => bot.handleUpdate(getMessageObject(id, '/start')), 100);
+
+            await waitAfter(() => bot.handleUpdate(getMessageObject(id, 'CREATE_DRIVER')), 100);
             await waitAfter(() => bot.handleUpdate(getMessageObject(id, 'ENTER_NAME')), 100);
             await waitAfter(() => bot.handleUpdate(getMessageObject(id, 'Test Name')), 100);
             await waitAfter(() => bot.handleUpdate(getMessageObject(id, 3808805553535)), 100);
